@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Crear Encuesta</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/estilos.css" th:href="@{/css/estilos.css}">
   <style>
-    .tab-btn.active{background:#0d6efd;color:#fff}
-    .question-card{border:1.5px solid #e3e3e3;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:1.5rem}
+    .tab-btn.active { background:#0d6efd; color:#fff }
+    .question-card{border:1.5px solid #e3e3e3;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-bottom:1.5rem}
     .option-input{width:90%}
     .icon-btn{background:none;border:none;color:#6c757d;font-size:1.1rem;margin-left:.5rem}
     .icon-btn:hover{color:#0d6efd}
@@ -19,15 +18,15 @@
     .answer-preview{opacity:.7}
     .opcion-correcta{outline:1px dashed #198754}
   </style>
-  <script>
-    function clonarTemplate(id){
-      return document.getElementById(id).content.firstElementChild.cloneNode(true);
-    }
-  </script>
 </head>
 <body>
-  <!-- Navbar (fragment) -->
-  <div th:replace="fragments/navbar :: navbar('encuestas')"></div>
+  <nav class="navbar navbar-light bg-white border-bottom">
+    <div class="container-fluid">
+      <a class="btn btn-outline-secondary" href="/encuestas"><i class="bi bi-x-lg"></i> Cerrar</a>
+      <span class="navbar-brand mx-auto fw-bold" id="titulo-navbar">Crear Formulario</span>
+      <button class="btn btn-primary" type="submit" form="formulario" id="btn-guardar"><i class="bi bi-check-lg"></i> Crear</button>
+    </div>
+  </nav>
 
   <div class="container mt-4" style="max-width:760px;">
     <ul class="nav nav-tabs mb-3">
@@ -103,46 +102,89 @@
 
   <template id="tpl-opcion-fila">
     <div class="d-flex align-items-center mb-2 p-1 rounded" data-opcion-fila data-correcta="false">
-      <span class="me-2" data-opcion-icono>•</span>
+      <span class="me-2" data-opcion-icono>◯</span>
       <input type="text" class="form-control option-input" placeholder="Opción" data-opcion-texto>
       <button type="button" class="icon-btn" title="Marcar correcta" data-opcion-correct-toggle><i class="bi bi-check-circle"></i></button>
       <button type="button" class="icon-btn" title="Eliminar opción" data-opcion-eliminar><i class="bi bi-x-lg"></i></button>
     </div>
   </template>
 
+  <template id="tpl-corta">
+    <input type="text" class="form-control answer-preview" placeholder="Respuesta corta" disabled>
+  </template>
+  <template id="tpl-parrafo">
+    <textarea class="form-control answer-preview" rows="3" placeholder="Respuesta larga" disabled></textarea>
+  </template>
+
   <script>
     function mostrarTab(tab){
-      document.getElementById('tab-contenido-respuestas').style.display = tab==='respuestas'?'':'none';
       document.getElementById('tab-contenido-preguntas').style.display = tab==='preguntas'?'':'none';
-      document.getElementById('tab-respuestas').classList.toggle('active',tab==='respuestas');
+      document.getElementById('tab-contenido-respuestas').style.display = tab==='respuestas'?'':'none';
       document.getElementById('tab-preguntas').classList.toggle('active',tab==='preguntas');
+      document.getElementById('tab-respuestas').classList.toggle('active',tab==='respuestas');
     }
 
+    function scrollToTop(){ window.scrollTo({top:0, behavior:'smooth'}); }
+
     const elLista = document.getElementById('preguntas-lista');
+
+    function clonarTemplate(id){
+      return document.getElementById(id).content.firstElementChild.cloneNode(true);
+    }
+
+    function renderizarCuerpoSegunTipo(card){
+      const tipo = card.querySelector('[data-q-tipo]').value;
+      const cont = card.querySelector('[data-q-cuerpo]');
+      cont.innerHTML = '';
+      if (tipo === 'corta') {
+        cont.appendChild(clonarTemplate('tpl-corta'));
+      } else if (tipo === 'parrafo') {
+        cont.appendChild(clonarTemplate('tpl-parrafo'));
+      } else if (tipo === 'opcion_multiple' || tipo === 'casillas' || tipo === 'desplegable') {
+        const bloque = clonarTemplate('tpl-opciones');
+        const contOpc = bloque.querySelector('[data-opciones]');
+        // crear 2 opciones por defecto
+        agregarOpcionFila(contOpc, tipo);
+        agregarOpcionFila(contOpc, tipo);
+        // botón agregar
+        bloque.querySelector('[data-agregar-opcion]').addEventListener('click', ()=> agregarOpcionFila(contOpc, tipo));
+        cont.appendChild(bloque);
+      }
+      aplicarReglasCorrectas(card);
+    }
 
     function agregarOpcionFila(contOpc, tipo){
       const fila = clonarTemplate('tpl-opcion-fila');
       const icono = fila.querySelector('[data-opcion-icono]');
-      icono.textContent = tipo==='casillas' ? '☐' : (tipo==='desplegable' ? '▾' : '•');
-      fila.querySelector('[data-opcion-eliminar]').addEventListener('click', ()=> fila.remove());
+      icono.textContent = tipo==='casillas' ? '☐' : (tipo==='desplegable' ? '⋮' : '◯');
+      // eliminar
+      fila.querySelector('[data-opcion-eliminar]').addEventListener('click', ()=>{
+        fila.remove();
+      });
+      // marcar correcta
       const btnCorrect = fila.querySelector('[data-opcion-correct-toggle]');
       btnCorrect.addEventListener('click', ()=>{
+        const card = fila.closest('[data-question]');
+        const tipoActual = card.querySelector('[data-q-tipo]').value;
+        const icon = btnCorrect.querySelector('i');
         const activar = fila.dataset.correcta !== 'true';
+        // actualizar estado visual
         fila.dataset.correcta = activar ? 'true' : 'false';
         fila.classList.toggle('bg-success-subtle', activar);
         fila.classList.toggle('opcion-correcta', activar);
-        const i = btnCorrect.querySelector('i');
-        i.classList.toggle('bi-check-circle-fill', activar);
-        i.classList.toggle('text-success', activar);
-        const card = fila.closest('[data-question]');
-        const tipoActual = card.querySelector('[data-q-tipo]').value;
-        if (activar && (tipoActual==='desplegable' || tipoActual==='casillas')){
+        icon.classList.toggle('bi-check-circle-fill', activar);
+        icon.classList.toggle('text-success', activar);
+
+        if (activar && (tipoActual === 'desplegable' || tipoActual === 'casillas')){
+          // solo una correcta: desactivar el resto
           fila.parentElement.querySelectorAll('[data-opcion-fila]').forEach(otra=>{
-            if (otra!==fila){
+            if (otra !== fila){
               otra.dataset.correcta = 'false';
               otra.classList.remove('bg-success-subtle','opcion-correcta');
               const i2 = otra.querySelector('[data-opcion-correct-toggle] i');
-              if (i2){ i2.classList.remove('bi-check-circle-fill','text-success'); }
+              if (i2){
+                i2.classList.remove('bi-check-circle-fill','text-success');
+              }
             }
           });
         }
@@ -150,34 +192,65 @@
       contOpc.appendChild(fila);
     }
 
-    function renderizarCuerpoSegunTipo(card){
-      const tipo = card.querySelector('[data-q-tipo]').value;
-      const cuerpo = card.querySelector('[data-q-cuerpo]');
-      cuerpo.innerHTML = '';
-      if (tipo === 'corta'){
-        cuerpo.innerHTML = '<input type="text" class="form-control answer-preview" placeholder="Respuesta corta">';
-      } else if (tipo === 'parrafo'){
-        cuerpo.innerHTML = '<textarea class="form-control answer-preview" rows="3" placeholder="Párrafo"></textarea>';
-      } else {
-        const bloque = clonarTemplate('tpl-opciones');
-        const contOpc = bloque.querySelector('[data-opciones]');
-        agregarOpcionFila(contOpc, tipo);
-        agregarOpcionFila(contOpc, tipo);
-        bloque.querySelector('[data-agregar-opcion]').addEventListener('click', ()=> agregarOpcionFila(contOpc, tipo));
-        cuerpo.appendChild(bloque);
-      }
-    }
-
     function enlazarEventosCard(card){
-      card.querySelector('[data-q-tipo]').addEventListener('change', ()=> renderizarCuerpoSegunTipo(card));
+      card.querySelector('[data-q-tipo]').addEventListener('change', ()=> {
+        renderizarCuerpoSegunTipo(card);
+        aplicarReglasCorrectas(card);
+      });
       card.querySelector('[data-q-duplicar]').addEventListener('click', ()=>{
-        const nueva = card.cloneNode(true);
-        nueva.querySelectorAll('[data-opcion-fila]').forEach(e=>e.remove());
+        const nueva = crearCardPregunta();
+        nueva.querySelector('[data-q-text]').value = card.querySelector('[data-q-text]').value;
+        // copiar tipo y opciones si aplica
+        const tipoSel = card.querySelector('[data-q-tipo]').value;
+        nueva.querySelector('[data-q-tipo]').value = tipoSel;
         renderizarCuerpoSegunTipo(nueva);
-        enlazarEventosCard(nueva);
+        if (tipoSel!=='corta' && tipoSel!=='parrafo'){
+          const srcOpc = card.querySelectorAll('[data-opcion-fila]');
+          const dstCont = nueva.querySelector('[data-opciones]');
+          dstCont.innerHTML = '';
+          srcOpc.forEach(o=>{
+            const fila = clonarTemplate('tpl-opcion-fila');
+            fila.querySelector('[data-opcion-texto]').value = o.querySelector('[data-opcion-texto]').value;
+            fila.querySelector('[data-opcion-icono]').textContent = tipoSel==='casillas' ? '☐' : (tipoSel==='desplegable' ? '⋮' : '◯');
+            // eventos eliminar y correcta
+            fila.querySelector('[data-opcion-eliminar]').addEventListener('click', ()=> fila.remove());
+            const btnCorrect = fila.querySelector('[data-opcion-correct-toggle]');
+            const esCorrecta = o.dataset.correcta === 'true' || o.classList.contains('opcion-correcta');
+            if (esCorrecta){
+              fila.dataset.correcta = 'true';
+              fila.classList.add('bg-success-subtle','opcion-correcta');
+              const i2 = btnCorrect.querySelector('i');
+              i2.classList.add('bi-check-circle-fill','text-success');
+            }
+            btnCorrect.addEventListener('click', ()=>{
+              const card2 = fila.closest('[data-question]');
+              const tipoActual = card2.querySelector('[data-q-tipo]').value;
+              const icon = btnCorrect.querySelector('i');
+              const activar = fila.dataset.correcta !== 'true';
+              fila.dataset.correcta = activar ? 'true' : 'false';
+              fila.classList.toggle('bg-success-subtle', activar);
+              fila.classList.toggle('opcion-correcta', activar);
+              icon.classList.toggle('bi-check-circle-fill', activar);
+              icon.classList.toggle('text-success', activar);
+              if (activar && (tipoActual === 'desplegable' || tipoActual === 'casillas')){
+                fila.parentElement.querySelectorAll('[data-opcion-fila]').forEach(otra=>{
+                  if (otra !== fila){
+                    otra.dataset.correcta = 'false';
+                    otra.classList.remove('bg-success-subtle','opcion-correcta');
+                    const i3 = otra.querySelector('[data-opcion-correct-toggle] i');
+                    if (i3){ i3.classList.remove('bi-check-circle-fill','text-success'); }
+                  }
+                });
+              }
+            });
+            dstCont.appendChild(fila);
+          });
+        }
         card.after(nueva);
       });
-      card.querySelector('[data-q-eliminar]').addEventListener('click', ()=> card.remove());
+      card.querySelector('[data-q-eliminar]').addEventListener('click', ()=>{
+        card.remove();
+      });
     }
 
     function crearCardPregunta(){
@@ -192,8 +265,54 @@
       setTimeout(()=> elLista.lastElementChild.scrollIntoView({behavior:'smooth', block:'center'}), 50);
     }
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-      agregarPregunta();
+    // Inicialización: una pregunta por defecto y manejo de envío
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const idEditar = (new URLSearchParams(window.location.search)).get('id');
+      if (idEditar){
+        const tituloNav = document.getElementById('titulo-navbar');
+        if (tituloNav) tituloNav.textContent = 'Editar Formulario';
+        const btn = document.getElementById('btn-guardar');
+        if (btn) btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar';
+        try{
+          const r = await fetch(`/api/encuestas/${idEditar}`);
+          if(!r.ok) throw new Error('No se pudo cargar la encuesta');
+          const data = await r.json();
+          document.getElementById('titulo-form').value = data.titulo || '';
+          document.getElementById('descripcion-form').value = data.descripcion || '';
+          elLista.innerHTML = '';
+          (data.preguntas || []).forEach(q=>{
+            const card = crearCardPregunta();
+            card.querySelector('[data-q-text]').value = q.texto || '';
+            card.querySelector('[data-q-tipo]').value = q.tipo || 'opcion_multiple';
+            renderizarCuerpoSegunTipo(card);
+            card.querySelector('[data-q-requerido]').checked = !!q.requerida;
+            if (q.tipo !== 'corta' && q.tipo !== 'parrafo'){
+              const cont = card.querySelector('[data-opciones]');
+              cont.innerHTML = '';
+              (q.opciones || []).forEach(op=>{
+                agregarOpcionFila(cont, q.tipo);
+                const fila = cont.lastElementChild;
+                if (!fila) return;
+                const input = fila.querySelector('[data-opcion-texto]');
+                if (input) input.value = op.texto || '';
+                if (op.correcta){
+                  fila.dataset.correcta = 'true';
+                  fila.classList.add('bg-success-subtle','opcion-correcta');
+                  const icon = fila.querySelector('[data-opcion-correct-toggle] i');
+                  if (icon){ icon.classList.add('bi-check-circle-fill','text-success'); }
+                }
+              });
+            }
+            elLista.appendChild(card);
+          });
+        }catch(err){
+          console.error(err);
+          alert('Error cargando la encuesta: ' + err.message);
+        }
+      } else {
+        agregarPregunta();
+      }
+
       document.getElementById('formulario').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const datos = {
@@ -217,7 +336,8 @@
               const correcta = f.dataset.correcta === 'true' || f.classList.contains('opcion-correcta');
               q.opciones.push({ texto: txt, correcta });
             });
-            if (tipo==='desplegable' || tipo==='casillas'){
+            // Regla: en desplegable/casillas, solo 1 correcta
+            if (tipo === 'desplegable' || tipo === 'casillas'){
               let marcada = false;
               q.opciones = q.opciones.map(o=>{
                 if (o.correcta && !marcada){ marcada = true; return o; }
@@ -228,12 +348,23 @@
           datos.preguntas.push(q);
         });
         try{
-          const resp = await fetch('/api/encuestas',{
-            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(datos)
+          const url = idEditar ? `/api/encuestas/${idEditar}` : '/api/encuestas';
+          const method = idEditar ? 'PUT' : 'POST';
+          const resp = await fetch(url,{
+            method,
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(datos)
           });
-          if(!resp.ok){ const txt = await resp.text(); throw new Error(txt || 'Error al guardar'); }
-          const id = await resp.json();
-          alert('Encuesta creada con ID: ' + id);
+          if(!resp.ok){
+            const txt = await resp.text();
+            throw new Error(txt || 'Error al guardar');
+          }
+          if (idEditar){
+            alert('Encuesta actualizada correctamente');
+          } else {
+            const id = await resp.json();
+            alert('Encuesta creada con ID: ' + id);
+          }
           window.location.href = '/encuestas';
         }catch(err){
           console.error(err);
@@ -241,8 +372,26 @@
         }
       });
     });
+
+    function aplicarReglasCorrectas(card){
+      const tipo = card.querySelector('[data-q-tipo]').value;
+      if (!(tipo === 'desplegable' || tipo === 'casillas')) return;
+      const filas = card.querySelectorAll('[data-opcion-fila]');
+      let primera = true;
+      filas.forEach(f=>{
+        const es = f.dataset.correcta === 'true' || f.classList.contains('opcion-correcta');
+        if (es && primera){
+          primera = false;
+        } else {
+          // desmarcar extra
+          f.dataset.correcta = 'false';
+          f.classList.remove('bg-success-subtle','opcion-correcta');
+          const i = f.querySelector('[data-opcion-correct-toggle] i');
+          if (i){ i.classList.remove('bi-check-circle-fill','text-success'); }
+        }
+      });
+    }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

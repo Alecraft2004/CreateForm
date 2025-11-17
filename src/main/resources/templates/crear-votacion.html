@@ -14,13 +14,14 @@
     .icon-btn{background:none;border:none;color:#6c757d;font-size:1.1rem;margin-left:.5rem}
     .icon-btn:hover{color:#198754}
   </style>
+  
 </head>
 <body>
   <nav class="navbar navbar-light bg-white border-bottom">
     <div class="container-fluid">
       <a class="btn btn-outline-success" href="/votaciones"><i class="bi bi-x-lg"></i> Cerrar</a>
-      <span class="navbar-brand mx-auto fw-bold">Crear Votación</span>
-      <button class="btn btn-success" type="submit" form="formulario"><i class="bi bi-check-lg"></i> Crear</button>
+      <span class="navbar-brand mx-auto fw-bold" id="titulo-navbar">Crear Votación</span>
+      <button class="btn btn-success" type="submit" form="formulario" id="btn-guardar"><i class="bi bi-check-lg"></i> Crear</button>
     </div>
   </nav>
 
@@ -69,7 +70,7 @@
 
   <template id="tpl-opcion-fila">
     <div class="d-flex align-items-center mb-2" data-opcion-fila>
-      <span class="me-2" data-opcion-icono>◯</span>
+      <span class="me-2" data-opcion-icono>•</span>
       <input type="text" class="form-control option-input" placeholder="Opción" data-opcion-texto>
       <button type="button" class="icon-btn" title="Eliminar opción" data-opcion-eliminar><i class="bi bi-x-lg"></i></button>
     </div>
@@ -102,7 +103,7 @@
     function aplicarIconoTipo(fila){
       const icono = fila.querySelector('[data-opcion-icono]');
       const tipo = tipoSelect.value;
-      icono.textContent = (tipo === 'multiple') ? '☐' : '◯';
+      icono.textContent = (tipo === 'multiple') ? '☑' : '•';
     }
 
     tipoSelect.addEventListener('change', ()=>{
@@ -111,10 +112,56 @@
 
     document.getElementById('agregar-opcion').addEventListener('click', agregarOpcionFila);
 
-    // Inicialización con dos opciones
-    document.addEventListener('DOMContentLoaded', ()=>{
-      agregarOpcionFila();
-      agregarOpcionFila();
+    function tipoPreguntaDesdeSelect(){
+      const v = document.getElementById('tipo-voto').value;
+      return v === 'multiple' ? 'casillas' : 'opcion_multiple';
+    }
+
+    function selectDesdeTipoPregunta(tp){
+      if (tp === 'casillas') return 'multiple';
+      return 'unica';
+    }
+
+    async function cargarVotacion(id){
+      const r = await fetch(`/api/encuestas/${id}`);
+      if(!r.ok) throw new Error('No se pudo cargar la votación');
+      const data = await r.json();
+      document.getElementById('titulo-vot').value = data.titulo || '';
+      document.getElementById('descripcion-vot').value = data.descripcion || '';
+      const pregunta = (data.preguntas && data.preguntas[0]) || null;
+      if (pregunta){
+        document.getElementById('texto-pregunta').value = pregunta.texto || '';
+        document.getElementById('tipo-voto').value = selectDesdeTipoPregunta(pregunta.tipo || 'opcion_multiple');
+        document.getElementById('requerida').checked = !!pregunta.requerida;
+        contOpc.innerHTML = '';
+        (pregunta.opciones || []).forEach(op=>{
+          agregarOpcionFila();
+          const fila = contOpc.lastElementChild;
+          if (fila){ fila.querySelector('[data-opcion-texto]').value = op.texto || ''; }
+        });
+        if (contOpc.children.length === 0){ agregarOpcionFila(); agregarOpcionFila(); }
+      } else {
+        contOpc.innerHTML = '';
+        agregarOpcionFila(); agregarOpcionFila();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const params = new URLSearchParams(window.location.search);
+      const idEditar = params.get('id');
+      if (idEditar){
+        document.getElementById('titulo-navbar').textContent = 'Editar Votación';
+        document.getElementById('btn-guardar').innerHTML = '<i class="bi bi-check-lg"></i> Guardar';
+        try{
+          await cargarVotacion(idEditar);
+        }catch(err){
+          console.error(err);
+          alert('Error cargando la votación: ' + err.message);
+        }
+      } else {
+        agregarOpcionFila();
+        agregarOpcionFila();
+      }
 
       document.getElementById('formulario').addEventListener('submit', async (e)=>{
         e.preventDefault();
@@ -127,23 +174,23 @@
           alert('Agrega al menos 2 opciones.');
           return;
         }
-        // Mapear a estructura de Encuesta (1 sola pregunta)
-        const tipoVoto = document.getElementById('tipo-voto').value; // unica|multiple
-        const tipoPregunta = tipoVoto === 'multiple' ? 'casillas' : 'opcion_multiple';
         const payload = {
           titulo: document.getElementById('titulo-vot').value || 'Votación sin título',
           descripcion: document.getElementById('descripcion-vot').value || '',
           esVotacion: true,
           preguntas: [{
             texto: document.getElementById('texto-pregunta').value || 'Pregunta',
-            tipo: tipoPregunta,
+            tipo: tipoPreguntaDesdeSelect(),
             requerida: document.getElementById('requerida').checked,
             opciones: opciones.map(t=> ({ texto: t, correcta: false }))
           }]
         };
         try{
-          const resp = await fetch('/api/encuestas',{
-            method:'POST',
+          const idEd = (new URLSearchParams(window.location.search)).get('id');
+          const url = idEd ? `/api/encuestas/${idEd}` : '/api/encuestas';
+          const method = idEd ? 'PUT' : 'POST';
+          const resp = await fetch(url,{
+            method,
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify(payload)
           });
@@ -151,8 +198,12 @@
             const txt = await resp.text();
             throw new Error(txt || 'Error al guardar');
           }
-          const id = await resp.json();
-          alert('Votación creada con ID: ' + id);
+          if (idEd){
+            alert('Votación actualizada correctamente');
+          } else {
+            const id = await resp.json();
+            alert('Votación creada con ID: ' + id);
+          }
           window.location.href = '/votaciones';
         }catch(err){
           console.error(err);
