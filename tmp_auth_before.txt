@@ -1,0 +1,40 @@
+package com.encuesta.EncuestaYVotacion.service;
+
+import com.encuesta.EncuestaYVotacion.model.Usuario;
+import com.encuesta.EncuestaYVotacion.repository.UsuarioRepository;
+import com.encuesta.EncuestaYVotacion.web.dto.RegistroDTO;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class AuthService {
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Transactional
+    public void register(RegistroDTO dto){
+        if (!dto.password.equals(dto.confirmPassword)) {
+            throw new IllegalArgumentException("Las contraseñas no coinciden");
+        }
+        if (usuarioRepository.existsByCorreo(dto.correo)){
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
+        Usuario u = new Usuario();
+        u.setNombre(dto.nombre);
+        u.setCorreo(dto.correo);
+        u.setContrasena(passwordEncoder.encode(dto.password));
+        String tipo = ("administrador".equalsIgnoreCase(dto.tipoUsuario) || "participante".equalsIgnoreCase(dto.tipoUsuario))
+                ? dto.tipoUsuario.toLowerCase()
+                : "participante";
+        u.setTipoUsuario(tipo);
+        usuarioRepository.save(u);
+    }
+}
+
+

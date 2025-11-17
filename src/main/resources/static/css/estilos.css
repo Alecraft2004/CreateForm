@@ -1,0 +1,81 @@
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  min-height: 100vh;
+}
+.navbar {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.hero-section {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  padding: 3rem 2rem;
+  margin-top: 2rem;
+}
+.card {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.footer {
+  background: #f1f5f9;
+}
+.btn-lg {
+  padding: 0.75rem 2rem;
+  font-size: 1.2rem;
+}
+.icon-circle {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.icon-encuesta {
+  background: #0d6efd1a;
+  color: #0d6efd;
+}
+.icon-votacion {
+  background: #1987541a;
+  color: #198754;
+}
+
+.tab-btn.active {
+  background: #0d6efd;
+  color: #fff;
+}
+.question-card {
+  border: 1.5px solid #e3e3e3;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 1.5rem;
+}
+.option-input {
+  width: 90%;
+}
+.dropdown-toggle::after {
+  margin-left: 0.5em;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+}
+.icon-btn:hover {
+  color: #0d6efd;
+}
+
+/* Auth screens */
+.auth-container {
+  max-width: 520px;
+  margin: 3rem auto;
+}
+.icon-auth {
+  background: #6c757d1a;
+  color: #6c757d;
+}
