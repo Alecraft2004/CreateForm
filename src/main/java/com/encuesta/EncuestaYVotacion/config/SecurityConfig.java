@@ -4,11 +4,11 @@ import com.encuesta.EncuestaYVotacion.service.UsuarioDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 public class SecurityConfig {
@@ -52,7 +52,10 @@ public class SecurityConfig {
         .logoutUrl("/logout")
         .logoutSuccessUrl("/login?logout").permitAll()
       )
-      .csrf(Customizer.withDefaults())
+      .csrf(csrf -> csrf
+        // Expone el token en una cookie accesible por JS: 'XSRF-TOKEN'
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+      )
       .authenticationProvider(authProvider);
 
     return http.build();

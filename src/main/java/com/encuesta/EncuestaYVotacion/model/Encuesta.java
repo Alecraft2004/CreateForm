@@ -21,6 +21,9 @@ public class Encuesta {
     @Column(name = "estado", length = 20)
     private String estado; // 'activa'|'inactiva'
 
+    @Column(name = "es_votacion", nullable = false)
+    private boolean esVotacion = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
@@ -36,6 +39,8 @@ public class Encuesta {
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+    public boolean isEsVotacion() { return esVotacion; }
+    public void setEsVotacion(boolean esVotacion) { this.esVotacion = esVotacion; }
     public Usuario getUsuario() { return usuario; }
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
     public List<Pregunta> getPreguntas() { return preguntas; }

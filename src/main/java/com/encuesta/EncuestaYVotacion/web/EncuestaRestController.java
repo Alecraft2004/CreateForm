@@ -39,6 +39,7 @@ public class EncuestaRestController {
         enc.setTitulo(dto.titulo);
         enc.setDescripcion(dto.descripcion);
         enc.setEstado("activa");
+        enc.setEsVotacion(Boolean.TRUE.equals(dto.esVotacion));
         enc.setUsuario(usuario);
 
         if (dto.preguntas != null){
@@ -65,8 +66,19 @@ public class EncuestaRestController {
     }
 
     @GetMapping
-    public List<EncuestaResumenDTO> listar(@RequestParam(name = "estado", required = false) String estado){
-        List<Encuesta> list = (estado == null || estado.isBlank()) ? encuestaRepository.findAll() : encuestaRepository.findByEstado(estado);
+    public List<EncuestaResumenDTO> listar(
+            @RequestParam(name = "estado", required = false) String estado,
+            @RequestParam(name = "esVotacion", required = false) Boolean esVotacion){
+        List<Encuesta> list;
+        if (esVotacion != null && estado != null && !estado.isBlank()) {
+            list = encuestaRepository.findByEstadoAndEsVotacion(estado, esVotacion);
+        } else if (esVotacion != null) {
+            list = encuestaRepository.findByEsVotacion(esVotacion);
+        } else if (estado != null && !estado.isBlank()) {
+            list = encuestaRepository.findByEstado(estado);
+        } else {
+            list = encuestaRepository.findAll();
+        }
         List<EncuestaResumenDTO> out = new ArrayList<>();
         for (Encuesta e : list){
             EncuestaResumenDTO r = new EncuestaResumenDTO();
