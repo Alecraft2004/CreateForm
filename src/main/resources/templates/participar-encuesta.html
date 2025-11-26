@@ -6,13 +6,134 @@
   <title>Participar en Encuesta</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link rel="stylesheet" href="/css/estilos.css" th:href="@{/css/estilos.css}">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .survey-header {
+      background: white;
+      border-radius: 15px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      border-top: 5px solid #0d6efd;
+      animation: fadeInDown 0.8s ease;
+    }
+    .question-card {
+      background: white;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      margin-bottom: 1.5rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      opacity: 0; /* Hidden initially for animation */
+      animation-fill-mode: forwards;
+    }
+    .question-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    .question-card.animate-in {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    .question-title {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 1.2rem;
+    }
+    
+    /* Custom Radio & Checkbox Styling */
+    .option-container {
+      position: relative;
+      margin-bottom: 0.8rem;
+    }
+    .option-label {
+      display: block;
+      padding: 1rem 1.2rem;
+      background: #f8f9fa;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      color: #495057;
+    }
+    .option-label:hover {
+      background: #e9ecef;
+    }
+    .form-check-input {
+      position: absolute;
+      opacity: 0;
+    }
+    .form-check-input:checked + .option-label {
+      background: #e7f1ff;
+      border-color: #0d6efd;
+      color: #0d6efd;
+      box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+    }
+    .form-check-input:checked + .option-label::before {
+      content: "\F26E"; /* Bootstrap Icon check-circle-fill */
+      font-family: "bootstrap-icons";
+      margin-right: 8px;
+    }
+    
+    /* Text Inputs */
+    .form-control {
+      border-radius: 10px;
+      padding: 0.8rem;
+      border: 1px solid #ced4da;
+      background-color: #f8f9fa;
+    }
+    .form-control:focus {
+      background-color: white;
+      box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: transparent;
+      z-index: 1000;
+    }
+    .progress-bar-custom {
+      height: 100%;
+      background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+      width: 0%;
+      transition: width 0.4s ease;
+      box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+    }
+
+    /* Floating Action Button for Submit */
+    .btn-submit-floating {
+      border-radius: 50px;
+      padding: 12px 40px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+      transition: all 0.3s ease;
+    }
+    .btn-submit-floating:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+    }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white">
+  <div class="progress-container">
+    <div class="progress-bar-custom" id="progressBar"></div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
     <div class="container">
       <a class="navbar-brand fw-bold" href="/">
-        <i class="bi bi-bar-chart-line-fill me-2"></i>
+        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>
         Encuestas y Votaciones
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -23,14 +144,10 @@
           <li class="nav-item"><a class="nav-link" href="/index">Inicio</a></li>
           <li class="nav-item"><a class="nav-link active" href="/encuestas">Encuestas</a></li>
           <li class="nav-item"><a class="nav-link" href="/votaciones">Votaciones</a></li>
-          <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/login">Iniciar Sesión</a></li>
-          <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/register">Registrarse</a></li>
           <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
             <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false"
                th:text="${usuarioActual != null ? usuarioActual.nombre : #authentication.name}">Usuario</a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-              <li class="dropdown-item-text small text-muted" th:text="${#authentication.name}">usuario@correo</li>
-              <li><hr class="dropdown-divider"></li>
               <li>
                 <form th:action="@{/logout}" method="post">
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -44,27 +161,34 @@
     </div>
   </nav>
 
-  <div class="container mb-5 mt-4">
-    <div id="loading" class="text-center">
-        <div class="spinner-border text-primary" role="status">
+  <div class="container mb-5 mt-4" style="max-width: 800px;">
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
+        <p class="mt-3 text-muted">Preparando tu encuesta...</p>
     </div>
     
     <div id="encuesta-container" style="display:none;">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body p-5">
-                <h1 class="display-6 fw-bold mb-3" id="titulo-encuesta"></h1>
-                <p class="lead text-muted" id="descripcion-encuesta"></p>
+        <div class="survey-header text-center">
+            <h1 class="display-5 fw-bold mb-3" id="titulo-encuesta"></h1>
+            <p class="lead text-muted" id="descripcion-encuesta"></p>
+            <div class="badge bg-light text-dark mt-2 border">
+                <i class="bi bi-question-circle me-1"></i>
+                <span id="total-preguntas">0</span> Preguntas
             </div>
         </div>
 
         <form id="form-participacion">
             <div id="preguntas-container"></div>
             
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <a href="/encuestas" class="btn btn-outline-secondary me-md-2">Cancelar</a>
-                <button type="submit" class="btn btn-primary btn-lg px-5">Enviar Respuestas</button>
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+                <a href="/encuestas" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg btn-submit-floating">
+                    Enviar Respuestas <i class="bi bi-send-fill ms-2"></i>
+                </button>
             </div>
         </form>
     </div>
@@ -76,6 +200,39 @@
   <script>
     const encuestaId = document.getElementById('encuestaId').value;
     const csrfToken = document.getElementById('csrfToken').value;
+    let totalQuestions = 0;
+
+    function markAnswered(element) {
+        const card = element.closest('.question-card');
+        const type = element.type;
+        const name = element.name;
+        
+        let isAnswered = false;
+        
+        if (type === 'checkbox') {
+            // Comportamiento de selección única para casillas (según solicitud)
+            if (element.checked) {
+                const siblings = card.querySelectorAll(`input[name="${name}"]`);
+                siblings.forEach(cb => {
+                    if (cb !== element) cb.checked = false;
+                });
+            }
+            const checked = card.querySelectorAll(`input[name="${name}"]:checked`);
+            isAnswered = checked.length > 0;
+        } else if (type === 'radio') {
+            isAnswered = element.checked;
+        } else {
+            isAnswered = element.value.trim() !== '';
+        }
+
+        if (isAnswered) {
+            card.classList.add('answered');
+            card.classList.remove('border-danger'); // Remove error style if present
+        } else {
+            card.classList.remove('answered');
+        }
+        updateProgress();
+    }
 
     async function cargarEncuesta() {
         try {
@@ -85,36 +242,47 @@
             
             document.getElementById('titulo-encuesta').textContent = data.titulo;
             document.getElementById('descripcion-encuesta').textContent = data.descripcion;
+            document.getElementById('total-preguntas').textContent = data.preguntas.length;
+            totalQuestions = data.preguntas.length;
             
             const container = document.getElementById('preguntas-container');
-            container.innerHTML = ''; // Limpiar contenedor
+            container.innerHTML = ''; 
+            
             data.preguntas.forEach((p, index) => {
                 const card = document.createElement('div');
-                card.className = 'card mb-3 shadow-sm';
+                card.className = 'card question-card p-4';
+                card.style.animationDelay = `${index * 0.1}s`; 
+                
                 let inputHtml = '';
                 
                 if (p.tipo === 'corta') {
-                    inputHtml = `<input type="text" class="form-control" name="p_${p.id}" required>`;
+                    inputHtml = `<input type="text" class="form-control" name="p_${p.id}" placeholder="Tu respuesta aquí..." required oninput="markAnswered(this)">`;
                 } else if (p.tipo === 'parrafo') {
-                    inputHtml = `<textarea class="form-control" name="p_${p.id}" rows="3" required></textarea>`;
+                    inputHtml = `<textarea class="form-control" name="p_${p.id}" rows="3" placeholder="Escribe tu respuesta detallada..." required oninput="markAnswered(this)"></textarea>`;
                 } else if (p.tipo === 'opcion_multiple') {
+                    // Radio buttons: Single selection
                     p.opciones.forEach(op => {
                         inputHtml += `
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="p_${p.id}" value="${op.id}" id="op_${op.id}" required>
-                                <label class="form-check-label" for="op_${op.id}">${op.texto}</label>
+                            <div class="option-container">
+                                <input class="form-check-input" type="radio" name="p_${p.id}" value="${op.id}" id="op_${op.id}" required onchange="markAnswered(this)">
+                                <label class="option-label" for="op_${op.id}">
+                                    ${op.texto}
+                                </label>
                             </div>`;
                     });
                 } else if (p.tipo === 'casillas') {
+                    // Checkboxes: Multiple selection
                     p.opciones.forEach(op => {
                         inputHtml += `
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="p_${p.id}" value="${op.id}" id="op_${op.id}">
-                                <label class="form-check-label" for="op_${op.id}">${op.texto}</label>
+                            <div class="option-container">
+                                <input class="form-check-input" type="checkbox" name="p_${p.id}" value="${op.id}" id="op_${op.id}" onchange="markAnswered(this)">
+                                <label class="option-label" for="op_${op.id}">
+                                    ${op.texto}
+                                </label>
                             </div>`;
                     });
                 } else if (p.tipo === 'desplegable') {
-                    inputHtml = `<select class="form-select" name="p_${p.id}" required>
+                    inputHtml = `<select class="form-select form-control" name="p_${p.id}" required onchange="markAnswered(this)">
                         <option value="" selected disabled>Selecciona una opción</option>`;
                     p.opciones.forEach(op => {
                         inputHtml += `<option value="${op.id}">${op.texto}</option>`;
@@ -123,12 +291,17 @@
                 }
 
                 card.innerHTML = `
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">${index + 1}. ${p.texto}</h5>
+                    <h5 class="question-title">
+                        <span class="badge bg-primary me-2 rounded-circle" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">${index + 1}</span>
+                        ${p.texto}
+                    </h5>
+                    <div class="mt-3">
                         ${inputHtml}
                     </div>
                 `;
                 container.appendChild(card);
+                
+                setTimeout(() => card.classList.add('animate-in'), 100);
             });
 
             document.getElementById('loading').style.display = 'none';
@@ -141,15 +314,47 @@
 
     document.getElementById('form-participacion').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Custom validation for checkboxes
+        let isValid = true;
+        const cards = document.querySelectorAll('#preguntas-container .question-card');
+        let firstError = null;
+
+        cards.forEach(card => {
+            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+            if (checkboxes.length > 0) {
+                const checked = card.querySelectorAll('input[type="checkbox"]:checked');
+                if (checked.length === 0) {
+                    isValid = false;
+                    card.classList.add('border-danger');
+                    if (!firstError) firstError = card;
+                } else {
+                    card.classList.remove('border-danger');
+                }
+            }
+        });
+
+        if (!isValid) {
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                alert('Por favor, responde todas las preguntas obligatorias.');
+            }
+            return;
+        }
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+
         const formData = new FormData(e.target);
         const respuestas = [];
         
-        const cards = document.querySelectorAll('#preguntas-container .card');
         cards.forEach(card => {
             const inputs = card.querySelectorAll('input, textarea, select');
             if (inputs.length === 0) return;
             
-            const name = inputs[0].name; // p_{id}
+            const name = inputs[0].name; 
             const pId = parseInt(name.split('_')[1]);
             
             const type = inputs[0].type;
@@ -189,8 +394,13 @@
             });
             
             if (res.ok) {
-                alert('¡Gracias por participar!');
-                window.location.href = '/encuestas';
+                // Success animation or redirect
+                btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>¡Enviado!';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                setTimeout(() => {
+                    window.location.href = '/encuestas';
+                }, 1000);
             } else {
                 let msg = 'Error desconocido';
                 try {
@@ -200,10 +410,14 @@
                     }
                 } catch (e) {}
                 alert('Error al enviar respuestas: ' + msg);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         } catch (err) {
             console.error(err);
             alert('Error de conexión.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     });
 

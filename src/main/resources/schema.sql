@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.encuesta (
     descripcion     TEXT,
     estado          VARCHAR(20),
     es_votacion     BOOLEAN NOT NULL DEFAULT FALSE,
+    tipo_encuesta   VARCHAR(50),
     id_usuario      INTEGER NOT NULL,
     CONSTRAINT fk_encuesta_usuario FOREIGN KEY (id_usuario)
         REFERENCES public.usuario(id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT

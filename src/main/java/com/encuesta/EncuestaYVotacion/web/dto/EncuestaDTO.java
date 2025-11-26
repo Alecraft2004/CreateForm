@@ -5,6 +5,7 @@ import java.util.*;
 public class EncuestaDTO {
     public String titulo;
     public String descripcion;
+    public String tipoEncuesta;
     public Boolean esVotacion; // null = default false
     public List<PreguntaDTO> preguntas;
 

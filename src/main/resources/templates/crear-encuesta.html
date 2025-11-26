@@ -41,7 +41,15 @@
       <div id="tab-contenido-preguntas">
         <div class="mb-4">
           <input id="titulo-form" type="text" class="form-control form-control-lg mb-2" placeholder="Formulario sin título" name="titulo">
-          <textarea id="descripcion-form" class="form-control" rows="2" placeholder="Descripción" name="descripcion"></textarea>
+          <textarea id="descripcion-form" class="form-control mb-2" rows="2" placeholder="Descripción" name="descripcion"></textarea>
+          <select id="tipo-encuesta" class="form-select" name="tipoEncuesta">
+            <option value="" selected disabled>Selecciona el tipo de encuesta</option>
+            <option value="Educativa">Educativa</option>
+            <option value="Satisfacción">Satisfacción</option>
+            <option value="Investigación">Investigación</option>
+            <option value="Social">Social</option>
+            <option value="Otro">Otro</option>
+          </select>
         </div>
 
         <div id="preguntas-lista"></div>
@@ -327,6 +335,7 @@
         const datos = {
           titulo: document.getElementById('titulo-form').value || 'Formulario sin título',
           descripcion: document.getElementById('descripcion-form').value || '',
+          tipoEncuesta: document.getElementById('tipo-encuesta').value || null,
           esVotacion: false,
           preguntas: []
         };

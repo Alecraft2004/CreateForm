@@ -49,6 +49,7 @@ public class EncuestaRestController {
         Encuesta enc = new Encuesta();
         enc.setTitulo(dto.titulo);
         enc.setDescripcion(dto.descripcion);
+        enc.setTipoEncuesta(dto.tipoEncuesta);
         enc.setEstado("activa");
         enc.setEsVotacion(Boolean.TRUE.equals(dto.esVotacion));
         enc.setUsuario(usuario);
@@ -101,16 +102,45 @@ public class EncuestaRestController {
             r.id = e.getId();
             r.titulo = e.getTitulo();
             r.descripcion = e.getDescripcion();
+            r.tipoEncuesta = e.getTipoEncuesta();
             r.estado = e.getEstado();
             r.preguntas = e.getPreguntas() != null ? e.getPreguntas().size() : 0;
             
             if (usuario != null && ("administrador".equals(usuario.getTipoUsuario()) || e.getUsuario().getId().equals(usuario.getId()))) {
                 r.esPropietario = true;
             }
+            if (usuario != null && "administrador".equals(usuario.getTipoUsuario())) {
+                r.puedeBorrar = true;
+            }
 
             out.add(r);
         }
         return out;
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String correo = auth != null ? auth.getName() : null;
+        if (correo == null) return ResponseEntity.status(401).build();
+        
+        Usuario usuario = usuarioRepository.findByCorreo(correo).orElse(null);
+        if (usuario == null || !"administrador".equals(usuario.getTipoUsuario())) {
+            return ResponseEntity.status(403).body("Solo el administrador puede eliminar encuestas.");
+        }
+
+        if (!encuestaRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Eliminar respuestas asociadas primero para evitar violaciones de FK
+        List<Respuesta> respuestas = respuestaRepository.findByEncuestaId(id);
+        if (!respuestas.isEmpty()) {
+            respuestaRepository.deleteAll(respuestas);
+        }
+
+        encuestaRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")
