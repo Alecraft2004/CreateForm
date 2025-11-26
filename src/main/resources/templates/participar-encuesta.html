@@ -183,7 +183,7 @@
             <div id="preguntas-container"></div>
             
             <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
-                <a href="/encuestas" class="btn btn-outline-secondary rounded-pill px-4">
+                <a href="#" id="btn-cancelar" class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="bi bi-arrow-left me-2"></i>Cancelar
                 </a>
                 <button type="submit" class="btn btn-primary btn-lg btn-submit-floating">
@@ -196,11 +196,16 @@
 
   <input type="hidden" id="encuestaId" th:value="${encuestaId}">
   <input type="hidden" id="csrfToken" th:value="${_csrf.token}">
+  <input type="hidden" id="apiUrl" th:value="${apiUrl != null ? apiUrl : '/api/encuestas'}">
 
   <script>
     const encuestaId = document.getElementById('encuestaId').value;
     const csrfToken = document.getElementById('csrfToken').value;
+    const apiUrl = document.getElementById('apiUrl').value;
     let totalQuestions = 0;
+
+    // Configurar botón cancelar dinámicamente
+    document.getElementById('btn-cancelar').href = apiUrl.includes('votaciones') ? '/votaciones' : '/encuestas';
 
     function markAnswered(element) {
         const card = element.closest('.question-card');
@@ -242,7 +247,7 @@
 
     async function cargarEncuesta() {
         try {
-            const res = await fetch(`/api/encuestas/${encuestaId}`);
+            const res = await fetch(`${apiUrl}/${encuestaId}`);
             if (!res.ok) throw new Error('Error al cargar encuesta');
             const data = await res.json();
             
@@ -390,7 +395,7 @@
         });
 
         try {
-            const res = await fetch(`/api/encuestas/${encuestaId}/participar`, {
+            const res = await fetch(`${apiUrl}/${encuestaId}/participar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -405,7 +410,7 @@
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-success');
                 setTimeout(() => {
-                    window.location.href = '/encuestas';
+                    window.location.href = apiUrl.includes('votaciones') ? '/votaciones' : '/encuestas';
                 }, 1000);
             } else {
                 let msg = 'Error desconocido';

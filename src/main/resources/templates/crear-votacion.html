@@ -73,7 +73,7 @@
 
   <template id="tpl-opcion-fila">
     <div class="d-flex align-items-center mb-2" data-opcion-fila>
-      <span class="me-2" data-opcion-icono>•</span>
+      <i class="me-2 text-muted" data-opcion-icono></i>
       <input type="text" class="form-control option-input" placeholder="Opción" data-opcion-texto>
       <button type="button" class="icon-btn" title="Eliminar opción" data-opcion-eliminar><i class="bi bi-x-lg"></i></button>
     </div>
@@ -112,7 +112,9 @@
     function aplicarIconoTipo(fila){
       const icono = fila.querySelector('[data-opcion-icono]');
       const tipo = tipoSelect.value;
-      icono.textContent = (tipo === 'multiple') ? '☑' : '•';
+      // multiple (Checkbox) -> Cuadrado, unica (Radio) -> Círculo
+      icono.className = (tipo === 'multiple') ? 'bi bi-square' : 'bi bi-circle';
+      icono.textContent = ''; 
     }
 
     tipoSelect.addEventListener('change', ()=>{
@@ -123,16 +125,17 @@
 
     function tipoPreguntaDesdeSelect(){
       const v = document.getElementById('tipo-voto').value;
-      return v === 'multiple' ? 'casillas' : 'opcion_multiple';
+      // Invertido: multiple -> opcion_multiple (Checkbox), unica -> casillas (Radio)
+      return v === 'multiple' ? 'opcion_multiple' : 'casillas';
     }
 
     function selectDesdeTipoPregunta(tp){
-      if (tp === 'casillas') return 'multiple';
+      if (tp === 'opcion_multiple') return 'multiple';
       return 'unica';
     }
 
     async function cargarVotacion(id){
-      const r = await fetch(`/api/encuestas/${id}`);
+      const r = await fetch(`/api/votaciones/${id}`);
       if(!r.ok) throw new Error('No se pudo cargar la votación');
       const data = await r.json();
       document.getElementById('titulo-vot').value = data.titulo || '';
@@ -196,7 +199,7 @@
         };
         try{
           const idEd = (new URLSearchParams(window.location.search)).get('id');
-          const url = idEd ? `/api/encuestas/${idEd}` : '/api/encuestas';
+          const url = idEd ? `/api/votaciones/${idEd}` : '/api/votaciones';
           const method = idEd ? 'PUT' : 'POST';
           const resp = await fetch(url,{
             method,

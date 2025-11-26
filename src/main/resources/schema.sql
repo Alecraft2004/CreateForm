@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS public.votacion (
     id_votacion     INTEGER PRIMARY KEY DEFAULT nextval('public.votacion_id_votacion_seq'),
     titulo          VARCHAR(200) NOT NULL,
     estado          VARCHAR(20),
+    tipo            VARCHAR(50),
     id_usuario      INTEGER NOT NULL,
     CONSTRAINT fk_votacion_usuario FOREIGN KEY (id_usuario)
         REFERENCES public.usuario(id_usuario)
@@ -129,3 +130,6 @@ CREATE TABLE IF NOT EXISTS public.resultado_votacion (
 ALTER TABLE public.encuesta
     ADD COLUMN IF NOT EXISTS es_votacion BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_encuesta_es_votacion ON public.encuesta(es_votacion);
+
+ALTER TABLE public.votacion
+    ADD COLUMN IF NOT EXISTS tipo VARCHAR(50);

@@ -43,12 +43,28 @@ public class IndexController {
     @GetMapping("/encuestas/{id}/participar")
     public String participarEncuesta(@PathVariable Integer id, Model model) {
         model.addAttribute("encuestaId", id);
+        model.addAttribute("apiUrl", "/api/encuestas");
         return "participar-encuesta";
     }
 
     @GetMapping("/encuestas/{id}/respuestas-view")
     public String verRespuestasEncuesta(@PathVariable Integer id, Model model) {
         model.addAttribute("encuestaId", id);
+        model.addAttribute("apiUrl", "/api/encuestas");
+        return "ver-respuestas";
+    }
+
+    @GetMapping("/votaciones/{id}/participar")
+    public String participarVotacion(@PathVariable Integer id, Model model) {
+        model.addAttribute("encuestaId", id);
+        model.addAttribute("apiUrl", "/api/votaciones");
+        return "participar-encuesta";
+    }
+
+    @GetMapping("/votaciones/{id}/respuestas-view")
+    public String verRespuestasVotacion(@PathVariable Integer id, Model model) {
+        model.addAttribute("encuestaId", id);
+        model.addAttribute("apiUrl", "/api/votaciones");
         return "ver-respuestas";
     }
 }
