@@ -210,16 +210,22 @@
         let isAnswered = false;
         
         if (type === 'checkbox') {
-            // Comportamiento de selección única para casillas (según solicitud)
-            if (element.checked) {
-                const siblings = card.querySelectorAll(`input[name="${name}"]`);
-                siblings.forEach(cb => {
-                    if (cb !== element) cb.checked = false;
-                });
-            }
+            // Checkbox logic (now used for Opción Múltiple)
             const checked = card.querySelectorAll(`input[name="${name}"]:checked`);
             isAnswered = checked.length > 0;
         } else if (type === 'radio') {
+            // Radio logic (now used for Casillas)
+            // Asegurar visualmente la selección única (aunque el navegador lo maneja)
+            if (element.checked) {
+                const siblings = card.querySelectorAll(`input[name="${name}"]`);
+                siblings.forEach(cb => {
+                    if (cb !== element) {
+                        cb.checked = false;
+                        // Forzar actualización visual si es necesario
+                        cb.parentElement.classList.remove('selected'); 
+                    }
+                });
+            }
             isAnswered = element.checked;
         } else {
             isAnswered = element.value.trim() !== '';
@@ -260,22 +266,22 @@
                 } else if (p.tipo === 'parrafo') {
                     inputHtml = `<textarea class="form-control" name="p_${p.id}" rows="3" placeholder="Escribe tu respuesta detallada..." required oninput="markAnswered(this)"></textarea>`;
                 } else if (p.tipo === 'opcion_multiple') {
-                    // Radio buttons: Single selection
+                    // Opción Múltiple: Ahora se comporta como Checkboxes (Selección Múltiple)
                     p.opciones.forEach(op => {
                         inputHtml += `
                             <div class="option-container">
-                                <input class="form-check-input" type="radio" name="p_${p.id}" value="${op.id}" id="op_${op.id}" required onchange="markAnswered(this)">
+                                <input class="form-check-input" type="checkbox" name="p_${p.id}" value="${op.id}" id="op_${op.id}" onchange="markAnswered(this)">
                                 <label class="option-label" for="op_${op.id}">
                                     ${op.texto}
                                 </label>
                             </div>`;
                     });
                 } else if (p.tipo === 'casillas') {
-                    // Checkboxes: Multiple selection
+                    // Casillas: Ahora se comporta como Radio Buttons (Selección Única)
                     p.opciones.forEach(op => {
                         inputHtml += `
                             <div class="option-container">
-                                <input class="form-check-input" type="checkbox" name="p_${p.id}" value="${op.id}" id="op_${op.id}" onchange="markAnswered(this)">
+                                <input class="form-check-input" type="radio" name="p_${p.id}" value="${op.id}" id="op_${op.id}" required onchange="markAnswered(this)">
                                 <label class="option-label" for="op_${op.id}">
                                     ${op.texto}
                                 </label>

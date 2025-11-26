@@ -6,6 +6,7 @@ public class EncuestaDetalleDTO {
     public Integer id;
     public String titulo;
     public String descripcion;
+    public String tipoEncuesta;
     public List<PreguntaDetalleDTO> preguntas;
 
     public static class PreguntaDetalleDTO {

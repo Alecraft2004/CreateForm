@@ -143,6 +143,57 @@ public class EncuestaRestController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizar(@PathVariable Integer id, @RequestBody EncuestaDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String correo = auth != null ? auth.getName() : null;
+        if (correo == null) return ResponseEntity.status(401).build();
+        
+        Usuario usuario = usuarioRepository.findByCorreo(correo).orElse(null);
+        if (usuario == null || !"administrador".equals(usuario.getTipoUsuario())) {
+            return ResponseEntity.status(403).body("Solo el administrador puede editar encuestas.");
+        }
+
+        Encuesta enc = encuestaRepository.findById(id).orElse(null);
+        if (enc == null) return ResponseEntity.notFound().build();
+
+        enc.setTitulo(dto.titulo);
+        enc.setDescripcion(dto.descripcion);
+        enc.setTipoEncuesta(dto.tipoEncuesta);
+        // No cambiamos esVotacion ni usuario creador
+
+        // Actualizar preguntas: estrategia simple de reemplazo
+        // Primero eliminamos las respuestas existentes para evitar violaciones de integridad referencial
+        List<Respuesta> respuestas = respuestaRepository.findByEncuestaId(id);
+        if (!respuestas.isEmpty()) {
+            respuestaRepository.deleteAll(respuestas);
+        }
+
+        enc.getPreguntas().clear();
+        
+        if (dto.preguntas != null){
+            for (EncuestaDTO.PreguntaDTO p : dto.preguntas){
+                Pregunta pr = new Pregunta();
+                pr.setEncuesta(enc);
+                pr.setTexto(p.texto);
+                pr.setTipo(normalizarTipo(p.tipo));
+
+                if (p.opciones != null){
+                    for (EncuestaDTO.OpcionDTO o : p.opciones){
+                        OpcionEncuesta op = new OpcionEncuesta();
+                        op.setPregunta(pr);
+                        op.setTexto(o.texto);
+                        pr.getOpciones().add(op);
+                    }
+                }
+                enc.getPreguntas().add(pr);
+            }
+        }
+        
+        encuestaRepository.save(enc);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<EncuestaDetalleDTO> obtenerDetalle(@PathVariable Integer id) {
         return encuestaRepository.findById(id)
@@ -222,6 +273,7 @@ public class EncuestaRestController {
         d.id = e.getId();
         d.titulo = e.getTitulo();
         d.descripcion = e.getDescripcion();
+        d.tipoEncuesta = e.getTipoEncuesta();
         d.preguntas = new ArrayList<>();
         if (e.getPreguntas() != null) {
             for (Pregunta p : e.getPreguntas()) {

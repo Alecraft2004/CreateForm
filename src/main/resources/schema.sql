@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.encuesta (
     tipo_encuesta   VARCHAR(50),
     id_usuario      INTEGER NOT NULL,
     CONSTRAINT fk_encuesta_usuario FOREIGN KEY (id_usuario)
-        REFERENCES public.usuario(id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT
+        REFERENCES public.usuario(id_usuario)
 );
 CREATE INDEX IF NOT EXISTS idx_encuesta_estado ON public.encuesta(estado);
 CREATE INDEX IF NOT EXISTS idx_encuesta_usuario ON public.encuesta(id_usuario);
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS public.pregunta (
     tipo_pregunta   VARCHAR(50),
     id_encuesta     INTEGER NOT NULL,
     CONSTRAINT fk_pregunta_encuesta FOREIGN KEY (id_encuesta)
-        REFERENCES public.encuesta(id_encuesta) ON UPDATE CASCADE ON DELETE CASCADE
+        REFERENCES public.encuesta(id_encuesta)
 );
 CREATE INDEX IF NOT EXISTS idx_pregunta_encuesta ON public.pregunta(id_encuesta);
 
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS public.opcion_encuesta (
     texto_opcion    VARCHAR(200) NOT NULL,
     id_pregunta     INTEGER NOT NULL,
     CONSTRAINT fk_opcion_pregunta FOREIGN KEY (id_pregunta)
-        REFERENCES public.pregunta(id_pregunta) ON UPDATE CASCADE ON DELETE CASCADE
+        REFERENCES public.pregunta(id_pregunta)
 );
 CREATE INDEX IF NOT EXISTS idx_opcion_pregunta ON public.opcion_encuesta(id_pregunta);
 
@@ -59,11 +59,11 @@ CREATE TABLE IF NOT EXISTS public.respuesta (
     id_opcion       INTEGER,
     respuesta_texto TEXT,
     CONSTRAINT fk_respuesta_usuario FOREIGN KEY (id_usuario)
-        REFERENCES public.usuario(id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT,
+        REFERENCES public.usuario(id_usuario),
     CONSTRAINT fk_respuesta_pregunta FOREIGN KEY (id_pregunta)
-        REFERENCES public.pregunta(id_pregunta) ON UPDATE CASCADE ON DELETE CASCADE,
+        REFERENCES public.pregunta(id_pregunta),
     CONSTRAINT fk_respuesta_opcion FOREIGN KEY (id_opcion)
-        REFERENCES public.opcion_encuesta(id_opcion) ON UPDATE CASCADE ON DELETE SET NULL
+        REFERENCES public.opcion_encuesta(id_opcion)
 );
 CREATE INDEX IF NOT EXISTS idx_respuesta_usuario ON public.respuesta(id_usuario);
 CREATE INDEX IF NOT EXISTS idx_respuesta_pregunta ON public.respuesta(id_pregunta);
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS public.resultado_encuesta (
     id_encuesta         INTEGER NOT NULL,
     resumen_estadistico TEXT,
     CONSTRAINT fk_resultado_encuesta FOREIGN KEY (id_encuesta)
-        REFERENCES public.encuesta(id_encuesta) ON UPDATE CASCADE ON DELETE CASCADE
+        REFERENCES public.encuesta(id_encuesta)
 );
 
 -- Votacion
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS public.votacion (
     estado          VARCHAR(20),
     id_usuario      INTEGER NOT NULL,
     CONSTRAINT fk_votacion_usuario FOREIGN KEY (id_usuario)
-        REFERENCES public.usuario(id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT
+        REFERENCES public.usuario(id_usuario)
 );
 
 -- Opcion Votacion
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS public.opcion_votacion (
     texto_opcion    VARCHAR(200) NOT NULL,
     id_votacion     INTEGER NOT NULL,
     CONSTRAINT fk_opcion_votacion FOREIGN KEY (id_votacion)
-        REFERENCES public.votacion(id_votacion) ON UPDATE CASCADE ON DELETE CASCADE
+        REFERENCES public.votacion(id_votacion)
 );
 
 -- Voto
@@ -107,11 +107,11 @@ CREATE TABLE IF NOT EXISTS public.voto (
     id_votacion     INTEGER NOT NULL,
     id_opcion       INTEGER NOT NULL,
     CONSTRAINT fk_voto_usuario FOREIGN KEY (id_usuario)
-        REFERENCES public.usuario(id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT,
+        REFERENCES public.usuario(id_usuario),
     CONSTRAINT fk_voto_votacion FOREIGN KEY (id_votacion)
-        REFERENCES public.votacion(id_votacion) ON UPDATE CASCADE ON DELETE CASCADE,
+        REFERENCES public.votacion(id_votacion),
     CONSTRAINT fk_voto_opcion FOREIGN KEY (id_opcion)
-        REFERENCES public.opcion_votacion(id_opcion) ON UPDATE CASCADE ON DELETE CASCADE
+        REFERENCES public.opcion_votacion(id_opcion)
 );
 
 -- Resultado Votacion
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS public.resultado_votacion (
     id_votacion     INTEGER NOT NULL,
     conteo_votos    INTEGER DEFAULT 0,
     CONSTRAINT fk_resultado_votacion FOREIGN KEY (id_votacion)
-        REFERENCES public.votacion(id_votacion) ON UPDATE CASCADE ON DELETE CASCADE
+        REFERENCES public.votacion(id_votacion)
 );
 
 -- Añadir columna es_votacion si la tabla ya existía sin esta columna

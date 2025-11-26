@@ -173,7 +173,8 @@
     function agregarOpcionFila(contOpc, tipo){
       const fila = clonarTemplate('tpl-opcion-fila');
       const icono = fila.querySelector('[data-opcion-icono]');
-      icono.textContent = tipo==='casillas' ? '☐' : (tipo==='desplegable' ? '⋮' : '◯');
+      // Intercambio de iconos: opcion_multiple = cuadrado (checkbox), casillas = circulo (radio)
+      icono.textContent = tipo==='opcion_multiple' ? '☐' : (tipo==='desplegable' ? '⋮' : '◯');
       // eliminar
       fila.querySelector('[data-opcion-eliminar]').addEventListener('click', ()=>{
         fila.remove();
@@ -228,7 +229,8 @@
           srcOpc.forEach(o=>{
             const fila = clonarTemplate('tpl-opcion-fila');
             fila.querySelector('[data-opcion-texto]').value = o.querySelector('[data-opcion-texto]').value;
-            fila.querySelector('[data-opcion-icono]').textContent = tipoSel==='casillas' ? '☐' : (tipoSel==='desplegable' ? '⋮' : '◯');
+            // Intercambio de iconos en duplicar
+            fila.querySelector('[data-opcion-icono]').textContent = tipoSel==='opcion_multiple' ? '☐' : (tipoSel==='desplegable' ? '⋮' : '◯');
             // eventos eliminar y correcta
             fila.querySelector('[data-opcion-eliminar]').addEventListener('click', ()=> fila.remove());
             const btnCorrect = fila.querySelector('[data-opcion-correct-toggle]');
@@ -296,6 +298,7 @@
           const data = await r.json();
           document.getElementById('titulo-form').value = data.titulo || '';
           document.getElementById('descripcion-form').value = data.descripcion || '';
+          document.getElementById('tipo-encuesta').value = data.tipoEncuesta || '';
           elLista.innerHTML = '';
           (data.preguntas || []).forEach(q=>{
             const card = crearCardPregunta();

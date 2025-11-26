@@ -25,6 +25,7 @@ public class SecurityConfig {
   }
 
   @Bean
+  @SuppressWarnings("deprecation")
   public DaoAuthenticationProvider authProvider(PasswordEncoder encoder) {
     DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
     provider.setUserDetailsService(uds);
