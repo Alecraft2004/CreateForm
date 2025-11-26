@@ -4,6 +4,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import org.springframework.web.bind.annotation.PathVariable;
+
 @Controller
 public class IndexController {
 
@@ -36,5 +38,17 @@ public class IndexController {
      @GetMapping("/crear-votacion")
     public String crearVotacion() {
         return "crear-votacion";
+    }
+
+    @GetMapping("/encuestas/{id}/participar")
+    public String participarEncuesta(@PathVariable Integer id, Model model) {
+        model.addAttribute("encuestaId", id);
+        return "participar-encuesta";
+    }
+
+    @GetMapping("/encuestas/{id}/respuestas-view")
+    public String verRespuestasEncuesta(@PathVariable Integer id, Model model) {
+        model.addAttribute("encuestaId", id);
+        return "ver-respuestas";
     }
 }
