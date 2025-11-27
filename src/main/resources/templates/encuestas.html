@@ -108,9 +108,14 @@
                 <span class="badge bg-info text-dark mb-2">${item.tipoEncuesta || 'General'}</span>
                 <p class="card-text text-muted small">Preguntas: ${item.preguntas}</p>
                 <p class="card-text">${desc}</p>
-                <a href="/encuestas/${item.id}/participar" class="btn btn-outline-primary w-100 mt-2">
-                  <i class="bi bi-pencil-square me-1"></i>Participar
-                </a>
+                <div class="d-flex gap-2 mt-2">
+                    <a href="/encuestas/${item.id}/participar" class="btn btn-outline-primary flex-fill">
+                      <i class="bi bi-pencil-square me-1"></i>Participar
+                    </a>
+                    <button onclick="compartirEncuesta(${item.id})" class="btn btn-outline-success" title="Copiar enlace para compartir">
+                      <i class="bi bi-share"></i>
+                    </button>
+                </div>
                 ${adminBtn}
               </div>
             </div>`;
@@ -193,6 +198,31 @@
                 'error'
             );
         }
+    }
+
+    function compartirEncuesta(id){
+        const url = window.location.origin + '/encuestas/' + id + '/participar';
+        navigator.clipboard.writeText(url).then(()=>{
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+              }
+            })
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Enlace copiado al portapapeles'
+            })
+        }).catch(err=>{
+            console.error('Error al copiar: ', err);
+            Swal.fire('Error', 'No se pudo copiar el enlace', 'error');
+        });
     }
 
     document.addEventListener('DOMContentLoaded', cargarEncuestas);

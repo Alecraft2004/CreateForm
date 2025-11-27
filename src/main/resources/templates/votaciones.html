@@ -6,6 +6,7 @@
   <title>Votaciones Activas</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="/css/estilos.css" th:href="@{/css/estilos.css}">
   <!-- CSRF -->
   <meta name="_csrf" th:content="${_csrf.token}">
@@ -118,9 +119,14 @@
                 <p class="card-text text-muted small flex-grow-1">${desc}</p>
                 
                 <div class="mt-3">
-                    <a href="/votaciones/${item.id}/participar" class="btn btn-success w-100 mb-2">
-                      <i class="bi bi-hand-thumbs-up me-1"></i>Votar
-                    </a>
+                    <div class="d-flex gap-2 mb-2">
+                        <a href="/votaciones/${item.id}/participar" class="btn btn-success flex-fill">
+                          <i class="bi bi-hand-thumbs-up me-1"></i>Votar
+                        </a>
+                        <button onclick="compartirVotacion(${item.id})" class="btn btn-outline-success" title="Copiar enlace">
+                          <i class="bi bi-share"></i>
+                        </button>
+                    </div>
                     ${botonesAdmin}
                 </div>
               </div>
@@ -149,6 +155,31 @@
         console.error(e);
         alert('Error al eliminar');
       }
+    }
+
+    function compartirVotacion(id){
+        const url = window.location.origin + '/votaciones/' + id + '/participar';
+        navigator.clipboard.writeText(url).then(()=>{
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+              }
+            })
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Enlace copiado al portapapeles'
+            })
+        }).catch(err=>{
+            console.error('Error al copiar: ', err);
+            alert('Enlace copiado: ' + url);
+        });
     }
 
     document.addEventListener('DOMContentLoaded', cargarVotaciones);

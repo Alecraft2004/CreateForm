@@ -47,7 +47,7 @@ public class SecurityConfig {
         // .usernameParameter("correo")
         // Si el input de password no se llama "password":
         // .passwordParameter("password")
-        .defaultSuccessUrl("/", true)
+        .defaultSuccessUrl("/", false)
       )
       .logout(logout -> logout
         .logoutUrl("/logout")
